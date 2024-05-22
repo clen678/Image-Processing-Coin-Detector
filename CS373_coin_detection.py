@@ -105,9 +105,6 @@ def normaliseImage(image, image_width, image_height):
     print("hq", hq)
     print("cum", cum)
 
-    # EXTENSION: Histogram Equalisation
-    
-
     numPixels = image_width*image_height;
     alpha = 0.05*numPixels
     beta = 0.95*numPixels
@@ -130,9 +127,28 @@ def normaliseImage(image, image_width, image_height):
             imageValue = (255/(qBeta-qAlpha))*(greyscale_pixel_array[i][j]-qAlpha)
             greyscale_pixel_array[i][j] = max(0, min(255, imageValue))
 
+    # ========================================================================================================
+    # EXTENSION: Histogram Equalisation
+    te = []
+    cMin = cum[0]
+    cMax = cum[len(cum)-1]
+
+    for i in range(0,len(cum)):
+        
+        value = round( 255*((cum[i]-cMin)/(cMax-cMin)) )
+        
+        te.append(value)
+
+    #calculate image value for equalisation
+    # for i in range(0,image_height):
+    #     for j in range(0,image_width):
+    #         imageValue = (255/(qBeta-qAlpha))*(greyscale_pixel_array[i][j]-qAlpha)
+    #         greyscale_pixel_array[i][j] = max(0, min(255, imageValue))
+    # ========================================================================================================
+
     return greyscale_pixel_array
 
-def HistogramEqualisation(q, hq, cum):
+def HistogramEqualisation(cum):
     t = []
 
     for i in range(0,len(cum)):
