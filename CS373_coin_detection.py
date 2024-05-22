@@ -75,24 +75,24 @@ def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_wid
             greyscale_pixel_array[i][j] = round(0.299*pixel_array_r[i][j]+ 0.587*pixel_array_g[i][j] + 0.114*pixel_array_b[i][j])
     
     # get histogram q
-    hist = []
+    q = []
     # flatten image into 1d array
     imageFlattened = [item for sublist in greyscale_pixel_array for item in sublist]
     # get unique values
-    hist = list(set(imageFlattened))
+    q = list(set(imageFlattened))
 
     hq = []
-    for b in range(0,len(hist)):
+    for b in range(0,len(q)):
         hq.append(imageFlattened.count(b))
         
 
     # get cumulative histogram cq
     cum = []
-    for b in range(0,len(hist)):
+    for b in range(0,len(q)):
         count = 0
         for i in range(0,image_height):
             for j in range(0,image_width):
-                if greyscale_pixel_array[i][j] == hist[b]:
+                if greyscale_pixel_array[i][j] == q[b]:
                     count = count + 1
         if b==0:
             cum.append(count)
@@ -100,10 +100,10 @@ def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_wid
             cum.append(count + cum[b-1])
 
     
-    print(cum)
+    # print(cum)
     print(image_height*image_width)
-    print(hist)
-    print(hq)
+    print(q)
+    # print(hq)
 
     numPixels = image_width*image_height;
     alpha = 0.05*numPixels
