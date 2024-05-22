@@ -65,6 +65,7 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 
 ###########################################
 ### You can add your own functions here ###
 ###########################################
+
 def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_width, image_height):
     
     greyscale_pixel_array = createInitializedGreyscalePixelArray(image_width, image_height)
@@ -73,56 +74,74 @@ def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_wid
     for i in range(0,image_height):
         for j in range(0,image_width):
             greyscale_pixel_array[i][j] = round(0.299*pixel_array_r[i][j]+ 0.587*pixel_array_g[i][j] + 0.114*pixel_array_b[i][j])
+
+
+    return greyscale_pixel_array
+
+def normaliseImage(image, image_width, image_height):
     
-    # get histogram q
+    greyscale_pixel_array = image
+
+    # get histogram frequency for q by flattening the greyscale pixel array
     q = []
-    # flatten image into 1d array
     imageFlattened = [item for sublist in greyscale_pixel_array for item in sublist]
-    # get unique values
     q = list(set(imageFlattened))
 
+    # get histogram hq
     hq = []
-    for b in range(0,len(q)):
+    for b in (q):
         hq.append(imageFlattened.count(b))
         
-
     # get cumulative histogram cq
     cum = []
-    for b in range(0,len(q)):
-        count = 0
-        for i in range(0,image_height):
-            for j in range(0,image_width):
-                if greyscale_pixel_array[i][j] == q[b]:
-                    count = count + 1
+    for b in range(0,len(hq)):
         if b==0:
-            cum.append(count)
+            cum.append(hq[0])
         else:
-            cum.append(count + cum[b-1])
-
+            cum.append(cum[b-1] + hq[b])
     
-    # print(cum)
     print(image_height*image_width)
-    print(q)
-    # print(hq)
+    print("q", q)
+    print("hq", hq)
+    print("cum", cum)
+
+    # EXTENSION: Histogram Equalisation
+    
 
     numPixels = image_width*image_height;
     alpha = 0.05*numPixels
     beta = 0.95*numPixels
 
-    # for i in range(0,len(result)):
-    #     if result[i] >= alpha:
-    #         minVal = i
-    #         break
+    #find cq and then qAlpha
+    for i in range(0,len(cum)):
+        if cum[i] > alpha and cum[i-1] < alpha:
+            qAlpha = q[i+1]
+            break
 
-    # for i in range(0,len(result)):
-    #     if result[i] >= beta:
-    #         maxVal = i
-    #         break
+    #find cq and then qBeta
+    for i in range(0,len(cum)):
+        if cum[i] < beta and cum[i+1] >= beta:
+            qBeta = q[i]
+            break
 
+    #calculate image value
+    for i in range(0,image_height):
+        for j in range(0,image_width):
+            imageValue = (255/(qBeta-qAlpha))*(greyscale_pixel_array[i][j]-qAlpha)
+            greyscale_pixel_array[i][j] = max(0, min(255, imageValue))
 
     return greyscale_pixel_array
 
+def HistogramEqualisation(q, hq, cum):
+    t = []
 
+    for i in range(0,len(cum)):
+        
+        value = round( 255*((cum[i]-cum[0])/(cum[len(cum)]-cum[0])) )
+        
+        t.append(value)
+
+    return t
 
 
 
@@ -166,7 +185,7 @@ def main(input_path, output_path):
     ############################################
     
     bounding_box_list = [[150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
-    px_array = computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
+    px_array = normaliseImage(computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height), image_width, image_height)
     
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
