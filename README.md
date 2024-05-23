@@ -1,6 +1,4 @@
-# 2024_S1_CS373_AssignmentSkeleton
-
-This repository provides a Python 3 code skeleton for the image processing assignment of CompSci 373 in Semester 1, 2024.
+# 2024_S1_CS373_Image_Processing_Assignment
 
 This assignment will require you to use what we have studied in the image processing lectures to generate a software that detects New Zealand coins in the images that we have provided in the ```Images/easy``` and ```Images/hard``` folders.
 
