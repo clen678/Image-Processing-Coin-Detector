@@ -6,6 +6,7 @@ import sys
 # assignment.
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
+import matplotlib.pyplot as plt
 
 # import our basic, light-weight png reader library
 import imageIO.png
@@ -125,42 +126,95 @@ def normaliseImage(image, image_width, image_height):
     for i in range(0,image_height):
         for j in range(0,image_width):
             imageValue = (255/(qBeta-qAlpha))*(greyscale_pixel_array[i][j]-qAlpha)
-            greyscale_pixel_array[i][j] = max(0, min(255, imageValue))
+            greyscale_pixel_array[i][j] = round(max(0, min(255, imageValue)))
 
     # ========================================================================================================
     # EXTENSION: Histogram Equalisation
-    te = []
-    cMin = cum[0]
-    cMax = cum[len(cum)-1]
-
-    for i in range(0,len(cum)):
-        
-        value = round( 255*((cum[i]-cMin)/(cMax-cMin)) )
-        
-        te.append(value)
-
-    #calculate image value for equalisation
-    # for i in range(0,image_height):
-    #     for j in range(0,image_width):
-    #         imageValue = (255/(qBeta-qAlpha))*(greyscale_pixel_array[i][j]-qAlpha)
-    #         greyscale_pixel_array[i][j] = max(0, min(255, imageValue))
+    # greyscale_pixel_array = histogramEqualisation(greyscale_pixel_array, cum, image_width, image_height)
     # ========================================================================================================
 
     return greyscale_pixel_array
 
-def HistogramEqualisation(cum):
-    t = []
+def histogramEqualisation(image, cum, image_width, image_height):
+    t = image
+    cMin = cum[0]
+    cMax = cum[len(cum)-1]
 
-    for i in range(0,len(cum)):
-        
-        value = round( 255*((cum[i]-cum[0])/(cum[len(cum)]-cum[0])) )
-        
-        t.append(value)
+    # generate the equalised histogram for new q
+    qEqualised = []
+    imageFlattened = [item for sublist in t for item in sublist]
+    qEqualised = list(set(imageFlattened))
 
+    # get histogram hq
+    hqEqualised = []
+    for b in (qEqualised):
+        hqEqualised.append(imageFlattened.count(b))
+
+    # get cumulative histogram cq
+    cumEqualised = []
+    for b in range(0,len(hqEqualised)):
+        if b==0:
+            cumEqualised.append(hqEqualised[0])
+        else:
+            cumEqualised.append(cumEqualised[b-1] + hqEqualised[b])
+
+    for i in range(0,image_height):
+        for j in range(0,image_width):
+            #get the index of the cum associated with the greyscale pixel value
+            flattened_index = qEqualised.index(t[i][j])
+
+
+            t[i][j] = round( 255*((cum[flattened_index] - cMin)/(cMax - cMin) ))
+
+    # plt.bar(range(len(cum)), cum)
+    # plt.xlabel('Bin')
+    # plt.ylabel('Frequency')
+    # plt.title('Histogram')
+    # plt.show()
+
+    # plt.bar(range(len(cumEqualised)), cumEqualised)
+    # plt.xlabel('Bin')
+    # plt.ylabel('Frequency')
+    # plt.title('Histogram')
+    # plt.show()
     return t
 
+def sharrFilter(image, image_width, image_height):
+    
+    sharrX = [[-3, 0, 3], [-10, 0, 10], [-3, 0, 3]]
+    sharrY = [[-3, -10, -3], [0, 0, 0], [3, 10, 3]]
 
+    # create a new image array to store the sharr filter result
+    newImage = createInitializedGreyscalePixelArray(image_width, image_height)
+    newImage2 = createInitializedGreyscalePixelArray(image_width, image_height)
 
+    # apply sharrX filter
+    for i in range(1, image_height-1):
+        for j in range(1, image_width-1):
+            newImage[i][j] = (sharrX[0][0]*image[i-1][j-1] + sharrX[0][1]*image[i-1][j] + sharrX[0][2]*image[i-1][j+1] + sharrX[1][0]*image[i][j-1] + sharrX[1][1]*image[i][j] + sharrX[1][2]*image[i][j+1] + sharrX[2][0]*image[i+1][j-1] + sharrX[2][1]*image[i+1][j] + sharrX[2][2]*image[i+1][j+1])/32
+
+    # apply sharrY filter
+    for i in range(1, image_height-1):
+        for j in range(1, image_width-1):
+            newImage2[i][j] = -(sharrY[0][0]*image[i-1][j-1] + sharrY[0][1]*image[i-1][j] + sharrY[0][2]*image[i-1][j+1] + sharrY[1][0]*image[i][j-1] + sharrY[1][1]*image[i][j] + sharrY[1][2]*image[i][j+1] + sharrY[2][0]*image[i+1][j-1] + sharrY[2][1]*image[i+1][j] + sharrY[2][2]*image[i+1][j+1])/32            
+
+    # combine the two sharr filters
+    for i in range(1, image_height-1):
+        for j in range(1, image_width-1):
+            newImage2[i][j] = abs(newImage[i][j]) + abs(newImage2[i][j])
+    
+    return newImage2
+
+def blurImage(image, image_width, image_height):
+    blurred = []
+    
+    #apply 5x5 mean blur filter ignoring borders
+    for i in range(4, image_height-4):
+        for j in range(4, image_width-4):
+            sumOf5x5 = image[i][j] + image[i-1][j] + image[i+1][j] + image[i][j-1] + image[i][j+1] + image[i-1][j-1] + image[i-1][j+1] + image[i+1][j-1] + image[i+1][j+1] + image[i-2][j] + image[i+2][j] + image[i][j-2] + image[i][j+2] + image[i-2][j-2] + image[i-2][j+2] + image[i+2][j-2] + image[i+2][j+2] + image[i-2][j-1] + image[i-2][j+1] + image[i+2][j-1] + image[i+2][j+1] + image[i-1][j-2] + image[i+1][j-2] + image[i-1][j+2] + image[i+1][j+2]
+            blurred[i][j] = sumOf5x5/25
+
+    return blurred
 
 
 
@@ -201,7 +255,11 @@ def main(input_path, output_path):
     ############################################
     
     bounding_box_list = [[150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
-    px_array = normaliseImage(computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height), image_width, image_height)
+    greyscaled = computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
+    normalised = normaliseImage(greyscaled, image_width, image_height)
+    sharred = sharrFilter(normalised, image_width, image_height)
+    blurred = blurImage(sharred, image_width, image_height)
+    px_array = blurred
     
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
