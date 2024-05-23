@@ -206,13 +206,18 @@ def sharrFilter(image, image_width, image_height):
     return newImage2
 
 def blurImage(image, image_width, image_height):
+    # image = createInitializedGreyscalePixelArray(image_width, image_height)
     blurred = []
     
-    #apply 5x5 mean blur filter ignoring borders
-    for i in range(4, image_height-4):
-        for j in range(4, image_width-4):
-            sumOf5x5 = image[i][j] + image[i-1][j] + image[i+1][j] + image[i][j-1] + image[i][j+1] + image[i-1][j-1] + image[i-1][j+1] + image[i+1][j-1] + image[i+1][j+1] + image[i-2][j] + image[i+2][j] + image[i][j-2] + image[i][j+2] + image[i-2][j-2] + image[i-2][j+2] + image[i+2][j-2] + image[i+2][j+2] + image[i-2][j-1] + image[i-2][j+1] + image[i+2][j-1] + image[i+2][j+1] + image[i-1][j-2] + image[i+1][j-2] + image[i-1][j+2] + image[i+1][j+2]
-            blurred[i][j] = sumOf5x5/25
+    #apply 5x5 mean blur filter ignoring borders    
+    for i in range(0, image_height):
+        row = []
+        for j in range(0, image_width):
+            if i-2 < 0 or i+2 >= image_height or j-2 < 0 or j+2 >= image_width:
+                row.append(image[i][j])
+                continue
+            row.append(round((image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2])/25))
+        blurred.append(row)
 
     return blurred
 
@@ -259,7 +264,14 @@ def main(input_path, output_path):
     normalised = normaliseImage(greyscaled, image_width, image_height)
     sharred = sharrFilter(normalised, image_width, image_height)
     blurred = blurImage(sharred, image_width, image_height)
-    px_array = blurred
+    blurred2 = blurImage(blurred, image_width, image_height)
+    blurred3 = blurImage(blurred2, image_width, image_height)
+    print(len(greyscaled))
+    print(len(normalised))
+    print(len(sharred))
+    print(len(blurred))
+    # blurred2 = blurImage(blurred, image_width, image_height)
+    px_array = blurred3
     
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
