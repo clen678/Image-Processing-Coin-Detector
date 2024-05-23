@@ -189,14 +189,20 @@ def sharrFilter(image, image_width, image_height):
     newImage2 = createInitializedGreyscalePixelArray(image_width, image_height)
 
     # apply sharrX filter
-    for i in range(1, image_height-1):
-        for j in range(1, image_width-1):
-            newImage[i][j] = (sharrX[0][0]*image[i-1][j-1] + sharrX[0][1]*image[i-1][j] + sharrX[0][2]*image[i-1][j+1] + sharrX[1][0]*image[i][j-1] + sharrX[1][1]*image[i][j] + sharrX[1][2]*image[i][j+1] + sharrX[2][0]*image[i+1][j-1] + sharrX[2][1]*image[i+1][j] + sharrX[2][2]*image[i+1][j+1])/32
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            if i-1 < 0 or i+1 >= image_height or j-1 < 0 or j+1 >= image_width:
+                newImage[i][j] = 0
+            else:
+                newImage[i][j] = (sharrX[0][0]*image[i-1][j-1] + sharrX[0][1]*image[i-1][j] + sharrX[0][2]*image[i-1][j+1] + sharrX[1][0]*image[i][j-1] + sharrX[1][1]*image[i][j] + sharrX[1][2]*image[i][j+1] + sharrX[2][0]*image[i+1][j-1] + sharrX[2][1]*image[i+1][j] + sharrX[2][2]*image[i+1][j+1])/32
 
     # apply sharrY filter
-    for i in range(1, image_height-1):
-        for j in range(1, image_width-1):
-            newImage2[i][j] = -(sharrY[0][0]*image[i-1][j-1] + sharrY[0][1]*image[i-1][j] + sharrY[0][2]*image[i-1][j+1] + sharrY[1][0]*image[i][j-1] + sharrY[1][1]*image[i][j] + sharrY[1][2]*image[i][j+1] + sharrY[2][0]*image[i+1][j-1] + sharrY[2][1]*image[i+1][j] + sharrY[2][2]*image[i+1][j+1])/32            
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            if i-1 < 0 or i+1 >= image_height or j-1 < 0 or j+1 >= image_width:
+                newImage[i][j] = 0
+            else:
+                newImage2[i][j] = -(sharrY[0][0]*image[i-1][j-1] + sharrY[0][1]*image[i-1][j] + sharrY[0][2]*image[i-1][j+1] + sharrY[1][0]*image[i][j-1] + sharrY[1][1]*image[i][j] + sharrY[1][2]*image[i][j+1] + sharrY[2][0]*image[i+1][j-1] + sharrY[2][1]*image[i+1][j] + sharrY[2][2]*image[i+1][j+1])/32            
 
     # combine the two sharr filters
     for i in range(1, image_height-1):
@@ -206,7 +212,6 @@ def sharrFilter(image, image_width, image_height):
     return newImage2
 
 def blurImage(image, image_width, image_height):
-    # image = createInitializedGreyscalePixelArray(image_width, image_height)
     blurred = []
     
     #apply 5x5 mean blur filter ignoring borders    
@@ -214,13 +219,53 @@ def blurImage(image, image_width, image_height):
         row = []
         for j in range(0, image_width):
             if i-2 < 0 or i+2 >= image_height or j-2 < 0 or j+2 >= image_width:
-                row.append(image[i][j])
-                continue
-            row.append(round((image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2])/25))
+                row.append(0)
+            else:
+                row.append(round((image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2])/25))
         blurred.append(row)
+    
+    # taking absolute value of the blurred image
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            blurred[i][j] = abs(blurred[i][j])
+    
+    # ////////////////////////////////////// TESTING PURPOSES ///////////////////////////////////////////////////////////
+    # generate the equalised histogram for new q
+    # qEqualised1 = []
+    # imageFlattened1 = [item for sublist in blurred for item in sublist]
+    # qEqualised1 = list(set(imageFlattened1))
 
+    # # get histogram hq
+    # hqEqualised1 = []
+    # for b in (qEqualised1):
+    #     hqEqualised1.append(imageFlattened1.count(b))
+
+    # # get cumulative histogram cq
+    # cumEqualised1 = []
+    # for b in range(0,len(hqEqualised1)):
+    #     if b==0:
+    #         cumEqualised1.append(hqEqualised1[0])
+    #     else:
+    #         cumEqualised1.append(cumEqualised1[b-1] + hqEqualised1[b])
+
+    # plt.bar(range(len(hqEqualised1)), hqEqualised1)
+    # plt.xlabel('Bin')
+    # plt.ylabel('Frequency')
+    # plt.title('Histogram')
+    # plt.show()
+    # //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     return blurred
 
+def thresholdImage(image, image_width, image_height):
+    
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            if image[i][j] < 22:
+                image[i][j] = 0
+            else:
+                image[i][j] = 255
+    
+    return image
 
 
 # This is our code skeleton that performs the coin detection.
@@ -266,12 +311,14 @@ def main(input_path, output_path):
     blurred = blurImage(sharred, image_width, image_height)
     blurred2 = blurImage(blurred, image_width, image_height)
     blurred3 = blurImage(blurred2, image_width, image_height)
+    thresholded = thresholdImage(blurred3, image_width, image_height)
     print(len(greyscaled))
     print(len(normalised))
     print(len(sharred))
     print(len(blurred))
+    print(len(blurred3))
     # blurred2 = blurImage(blurred, image_width, image_height)
-    px_array = blurred3
+    px_array = thresholded
     
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
