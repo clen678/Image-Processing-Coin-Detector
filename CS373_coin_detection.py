@@ -76,7 +76,6 @@ def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_wid
         for j in range(0,image_width):
             greyscale_pixel_array[i][j] = round(0.299*pixel_array_r[i][j]+ 0.587*pixel_array_g[i][j] + 0.114*pixel_array_b[i][j])
 
-
     return greyscale_pixel_array
 
 def normaliseImage(image, image_width, image_height):
@@ -135,6 +134,7 @@ def normaliseImage(image, image_width, image_height):
 
     return greyscale_pixel_array
 
+# EXTENSION
 def histogramEqualisation(image, cum, image_width, image_height):
     t = image
     cMin = cum[0]
@@ -158,12 +158,12 @@ def histogramEqualisation(image, cum, image_width, image_height):
         else:
             cumEqualised.append(cumEqualised[b-1] + hqEqualised[b])
 
+    # calculate equalisation
     for i in range(0,image_height):
         for j in range(0,image_width):
+
             #get the index of the cum associated with the greyscale pixel value
             flattened_index = qEqualised.index(t[i][j])
-
-
             t[i][j] = round( 255*((cum[flattened_index] - cMin)/(cMax - cMin) ))
 
     # plt.bar(range(len(cum)), cum)
@@ -200,7 +200,7 @@ def sharrFilter(image, image_width, image_height):
     for i in range(0, image_height):
         for j in range(0, image_width):
             if i-1 < 0 or i+1 >= image_height or j-1 < 0 or j+1 >= image_width:
-                newImage[i][j] = 0
+                newImage2[i][j] = 0
             else:
                 newImage2[i][j] = -(sharrY[0][0]*image[i-1][j-1] + sharrY[0][1]*image[i-1][j] + sharrY[0][2]*image[i-1][j+1] + sharrY[1][0]*image[i][j-1] + sharrY[1][1]*image[i][j] + sharrY[1][2]*image[i][j+1] + sharrY[2][0]*image[i+1][j-1] + sharrY[2][1]*image[i+1][j] + sharrY[2][2]*image[i+1][j+1])/32            
 
@@ -267,6 +267,106 @@ def thresholdImage(image, image_width, image_height):
     
     return image
 
+def dilateImage(pixel_array, image_width, image_height):
+    padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
+    padded = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
+    depadded = createInitializedGreyscalePixelArray(image_width, image_height)
+
+    kernel = [[0, 0, 1, 0, 0],
+              [0, 1, 1, 1, 0],
+              [1, 1, 1, 1, 1],
+              [0, 1, 1, 1, 0],
+              [0, 0, 1, 0, 0]]
+    
+    # adding borderZeroPadding
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            padding[i+1][j+1] = pixel_array[i][j]
+    
+    #dilate the image
+    for i in range(2, image_height+2):
+        for j in range(2, image_width+2):
+            #if kernel hits in the image
+            if padding[i-2][j] >=1 or padding[i-1][j-1] >=1 or padding[i-1][j] >=1 or padding[i-1][j+1] >=1 or padding[i][j-2] >=1 or padding[i][j-1] >=1 or padding[i][j] >=1 or padding[i][j+1] >=1 or padding[i][j+2] >=1 or padding[i+1][j-1] >=1 or padding[i+1][j] >=1 or padding[i+1][j+1] >=1 or padding[i+2][j] >=1:
+                # 5x5 around i j is set to 1
+                padded[i-2][j-2] = 255
+                padded[i-2][j-1] = 255
+                padded[i-2][j] = 255
+                padded[i-2][j+1] = 255
+                padded[i-2][j+2] = 255
+                padded[i-1][j-2] = 255
+                padded[i-1][j-1] = 255
+                padded[i-1][j] = 255
+                padded[i-1][j+1] = 255
+                padded[i-1][j+2] = 255
+                padded[i][j-2] = 255
+                padded[i][j-1] = 255
+                padded[i][j] = 255
+                padded[i][j+1] = 255
+                padded[i][j+2] = 255
+                padded[i+1][j-2] = 255
+                padded[i+1][j-1] = 255
+                padded[i+1][j] = 255
+                padded[i+1][j+1] = 255
+                padded[i+1][j+2] = 255
+                padded[i+2][j-2] = 255
+                padded[i+2][j-1] = 255
+                padded[i+2][j] = 255
+                padded[i+2][j+1] = 255
+                padded[i+2][j+2] = 255
+
+                
+    #removing borderZeroPadding
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            depadded[i][j] = padded[i+2][j+2]
+       
+    return depadded
+
+def erodeImage(pixel_array, image_width, image_height):
+    padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
+    paddedErosion = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
+    depadded = createInitializedGreyscalePixelArray(image_width, image_height)
+    
+    
+    # adding borderZeroPadding
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            padding[i+1][j+1] = pixel_array[i][j]
+    
+    #dilate the image
+    for i in range(2, image_height+2):
+        for j in range(2, image_width+2):
+            #if kernel hits in the image
+            if padding[i-2][j] >=1 and padding[i-1][j-1] >=1 and padding[i-1][j] >=1 and padding[i-1][j+1] >=1 and padding[i][j-2] >=1 and padding[i][j-1] >=1 and padding[i][j] >=1 and padding[i][j+1] >=1 and padding[i][j+2] >=1 and padding[i+1][j-1] >=1 and padding[i+1][j] >=1 and padding[i+1][j+1] >=1 and padding[i+2][j] >=1:
+                paddedErosion[i][j] = 255
+                
+    #removing borderZeroPadding
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            depadded[i][j] = paddedErosion[i+2][j+2]
+                
+    return depadded
+
+def findBoundingboxLimits(image, image_width, image_height):
+    limits = [0, 0, 0, 0]
+    x = []
+    y = []
+    #min x that 255 appears
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            if image[i][j] == 255:
+                x.append(j)
+                y.append(i)
+    limits[0] = min(x)
+    limits[1] = min(y)
+    limits[2] = max(x)
+    limits[3] = max(y)
+    print(x,"x")
+    print(y,"y")
+
+    return limits
+
 
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
@@ -304,7 +404,7 @@ def main(input_path, output_path):
     ### bounding_box[3] = max y
     ############################################
     
-    bounding_box_list = [[150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
+    # bounding_box_list = [[150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
     greyscaled = computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
     normalised = normaliseImage(greyscaled, image_width, image_height)
     sharred = sharrFilter(normalised, image_width, image_height)
@@ -312,13 +412,23 @@ def main(input_path, output_path):
     blurred2 = blurImage(blurred, image_width, image_height)
     blurred3 = blurImage(blurred2, image_width, image_height)
     thresholded = thresholdImage(blurred3, image_width, image_height)
+    dilated = dilateImage(thresholded, image_width, image_height)
+    dilated2 = dilateImage(dilated, image_width, image_height)
+    eroded = erodeImage(dilated2, image_width, image_height)
+    eroded2 = erodeImage(eroded, image_width, image_height)
+    eroded3 = erodeImage(eroded2, image_width, image_height)
+    bounding_box_list = [findBoundingboxLimits(eroded3, image_width, image_height)]
     print(len(greyscaled))
     print(len(normalised))
     print(len(sharred))
     print(len(blurred))
     print(len(blurred3))
+    print(len(thresholded))
+    print(len(dilated2))
+    print(len(eroded2))
     # blurred2 = blurImage(blurred, image_width, image_height)
-    px_array = thresholded
+    # px_array = eroded2
+    px_array = pyplot.imread(input_filename)
     
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
