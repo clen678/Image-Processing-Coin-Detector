@@ -281,7 +281,7 @@ def dilateImage(pixel_array, image_width, image_height):
     # adding borderZeroPadding
     for i in range(0, image_height):
         for j in range(0, image_width):
-            padding[i+1][j+1] = pixel_array[i][j]
+            padding[i+2][j+2] = pixel_array[i][j]
     
     #dilate the image
     for i in range(2, image_height+2):
@@ -332,7 +332,7 @@ def erodeImage(pixel_array, image_width, image_height):
     # adding borderZeroPadding
     for i in range(0, image_height):
         for j in range(0, image_width):
-            padding[i+1][j+1] = pixel_array[i][j]
+            padding[i+2][j+2] = pixel_array[i][j]
     
     #dilate the image
     for i in range(2, image_height+2):
@@ -362,8 +362,8 @@ def findBoundingboxLimits(image, image_width, image_height):
     limits[1] = min(y)
     limits[2] = max(x)
     limits[3] = max(y)
-    print(x,"x")
-    print(y,"y")
+    # print(x,"x")
+    # print(y,"y")
 
     return limits
 
@@ -373,6 +373,8 @@ def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
     image_name = 'easy_case_1'
     input_filename = f'./Images/easy/{image_name}.png'
+    # image_name = 'hard_case_2'
+    # input_filename = f'./Images/hard/{image_name}.png'
     if TEST_MODE:
         input_filename = input_path
 
@@ -417,7 +419,8 @@ def main(input_path, output_path):
     eroded = erodeImage(dilated2, image_width, image_height)
     eroded2 = erodeImage(eroded, image_width, image_height)
     eroded3 = erodeImage(eroded2, image_width, image_height)
-    bounding_box_list = [findBoundingboxLimits(eroded3, image_width, image_height)]
+    eroded4 = erodeImage(eroded3, image_width, image_height)
+    bounding_box_list = [findBoundingboxLimits(eroded4, image_width, image_height)]
     print(len(greyscaled))
     print(len(normalised))
     print(len(sharred))
@@ -426,8 +429,8 @@ def main(input_path, output_path):
     print(len(thresholded))
     print(len(dilated2))
     print(len(eroded2))
-    # blurred2 = blurImage(blurred, image_width, image_height)
-    # px_array = eroded2
+    blurred2 = blurImage(blurred, image_width, image_height)
+    # px_array = eroded3
     px_array = pyplot.imread(input_filename)
     
     fig, axs = pyplot.subplots(1, 1)
