@@ -84,13 +84,13 @@ def normaliseImage(image, image_width, image_height):
 
     # get histogram frequency for q by flattening the greyscale pixel array
     q = []
-    imageFlattened = [item for sublist in greyscale_pixel_array for item in sublist]
-    q = list(set(imageFlattened))
+    flattenedImage = [element for element2 in greyscale_pixel_array for element in element2]
+    q = list(set(flattenedImage))
 
     # get histogram hq
     hq = []
     for b in (q):
-        hq.append(imageFlattened.count(b))
+        hq.append(flattenedImage.count(b))
         
     # get cumulative histogram cq
     cum = []
@@ -99,11 +99,6 @@ def normaliseImage(image, image_width, image_height):
             cum.append(hq[0])
         else:
             cum.append(cum[b-1] + hq[b])
-    
-    print(image_height*image_width)
-    print("q", q)
-    print("hq", hq)
-    print("cum", cum)
 
     numPixels = image_width*image_height;
     alpha = 0.05*numPixels
@@ -142,13 +137,13 @@ def histogramEqualisation(image, cum, image_width, image_height):
 
     # generate the equalised histogram for new q
     qEqualised = []
-    imageFlattened = [item for sublist in t for item in sublist]
-    qEqualised = list(set(imageFlattened))
+    flattenedImage = [element for element2 in t for element in element2]
+    qEqualised = list(set(flattenedImage))
 
     # get histogram hq
     hqEqualised = []
     for b in (qEqualised):
-        hqEqualised.append(imageFlattened.count(b))
+        hqEqualised.append(flattenedImage.count(b))
 
     # get cumulative histogram cq
     cumEqualised = []
@@ -216,13 +211,13 @@ def blurImage(image, image_width, image_height):
     
     #apply 5x5 mean blur filter ignoring borders    
     for i in range(0, image_height):
-        row = []
+        temp = []
         for j in range(0, image_width):
             if i-2 < 0 or i+2 >= image_height or j-2 < 0 or j+2 >= image_width:
-                row.append(0)
+                temp.append(0)
             else:
-                row.append(round((image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2])/25))
-        blurred.append(row)
+                temp.append(round((image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2])/25))
+        blurred.append(temp)
     
     # taking absolute value of the blurred image
     for i in range(0, image_height):
@@ -288,7 +283,7 @@ def dilateImage(pixel_array, image_width, image_height):
         for j in range(2, image_width+2):
             #if kernel hits in the image
             if padding[i-2][j] >=1 or padding[i-1][j-1] >=1 or padding[i-1][j] >=1 or padding[i-1][j+1] >=1 or padding[i][j-2] >=1 or padding[i][j-1] >=1 or padding[i][j] >=1 or padding[i][j+1] >=1 or padding[i][j+2] >=1 or padding[i+1][j-1] >=1 or padding[i+1][j] >=1 or padding[i+1][j+1] >=1 or padding[i+2][j] >=1:
-                # 5x5 around i j is set to 1
+                # 5x5 around i j is set to 255
                 padded[i-2][j-2] = 255
                 padded[i-2][j-1] = 255
                 padded[i-2][j] = 255
@@ -314,7 +309,6 @@ def dilateImage(pixel_array, image_width, image_height):
                 padded[i+2][j] = 255
                 padded[i+2][j+1] = 255
                 padded[i+2][j+2] = 255
-
                 
     #removing borderZeroPadding
     for i in range(0, image_height):
@@ -327,7 +321,6 @@ def erodeImage(pixel_array, image_width, image_height):
     padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
     paddedErosion = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
     depadded = createInitializedGreyscalePixelArray(image_width, image_height)
-    
     
     # adding borderZeroPadding
     for i in range(0, image_height):
@@ -348,30 +341,79 @@ def erodeImage(pixel_array, image_width, image_height):
                 
     return depadded
 
-def findBoundingboxLimits(image, image_width, image_height):
-    limits = [0, 0, 0, 0]
-    x = []
-    y = []
-    #min x that 255 appears
+def connectedComponents(image, image_width, image_height):
+    labels = createInitializedGreyscalePixelArray(image_width, image_height)
+    visited = createInitializedGreyscalePixelArray(image_width, image_height)
+    label = 1
+
     for i in range(0, image_height):
         for j in range(0, image_width):
-            if image[i][j] == 255:
-                x.append(j)
-                y.append(i)
-    limits[0] = min(x)
-    limits[1] = min(y)
-    limits[2] = max(x)
-    limits[3] = max(y)
-    # print(x,"x")
-    # print(y,"y")
 
-    return limits
+            # if pixel is not object and not visited
+            if image[i][j] != 0 and visited[i][j] == 0:
+                q = []
+                q.append((i, j))
+
+                while len(q) > 0:
+                    (x, y) = q.pop()
+                    labels[x][y] = label
+                    visited[x][y] = 1
+
+                    # check if the pixel is object and not visited and add to queue
+                    if x-1 >= 0 and image[x-1][y] != 0 and visited[x-1][y] == 0:
+                        q.append((x-1, y))
+                        visited[x-1][y] = 1
+                    if x + 1 < image_height and image[x+1][y] != 0 and visited[x+1][y] == 0:
+                        q.append((x+1, y))
+                        visited[x+1][y] = 1
+                    if y >= 0 and image[x][y-1] != 0 and visited[x][y-1] == 0:
+                        q.append((x, y-1))
+                        visited[x][y-1] = 1
+                    if y+1 < image_width and image[x][y+1] != 0 and visited[x][y+1] == 0:
+                        q.append((x, y+1))
+                        visited[x][y+1] = 1
+                label += 1
+
+                # get list of different labels generated from the image
+                uniqueLabels = []
+                for i in range(0, image_height):
+                    for j in range(0, image_width):
+                        if labels[i][j] not in uniqueLabels:
+                            uniqueLabels.append(labels[i][j])
+                uniqueLabels.remove(0)
+                
+    return labels, uniqueLabels
+    
+
+def findBoundingboxLimits(labels, image_width, image_height, object_labels):
+    boundingBoxLimits = []
+
+    # for the amount of objects in the image, get bounding box values
+    for objects in range(0, len(object_labels)):
+
+        limits = [0, 0, 0, 0]
+        x = []
+        y = []
+
+        # find min and max x and y values for each object
+        for i in range(0, image_height):
+            for j in range(0, image_width):
+                if labels[i][j] == object_labels[objects]:
+                    x.append(j)
+                    y.append(i)
+        limits[0] = min(x)
+        limits[1] = min(y)
+        limits[2] = max(x)
+        limits[3] = max(y)
+        boundingBoxLimits.append(limits)
+
+    return boundingBoxLimits
 
 
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
-    image_name = 'easy_case_1'
+    image_name = 'easy_case_2'
     input_filename = f'./Images/easy/{image_name}.png'
     # image_name = 'hard_case_2'
     # input_filename = f'./Images/hard/{image_name}.png'
@@ -420,17 +462,19 @@ def main(input_path, output_path):
     eroded2 = erodeImage(eroded, image_width, image_height)
     eroded3 = erodeImage(eroded2, image_width, image_height)
     eroded4 = erodeImage(eroded3, image_width, image_height)
-    bounding_box_list = [findBoundingboxLimits(eroded4, image_width, image_height)]
-    print(len(greyscaled))
-    print(len(normalised))
-    print(len(sharred))
-    print(len(blurred))
-    print(len(blurred3))
-    print(len(thresholded))
-    print(len(dilated2))
-    print(len(eroded2))
-    blurred2 = blurImage(blurred, image_width, image_height)
-    # px_array = eroded3
+    labels, uniqueLabels = connectedComponents(eroded4, image_width, image_height)
+    bounding_box_list = findBoundingboxLimits(labels, image_width, image_height, uniqueLabels)
+    # print(len(greyscaled))
+    # print(len(normalised))
+    # print(len(sharred))
+    # print(len(blurred))
+    # print(len(blurred3))
+    # print(len(thresholded))
+    # print(len(dilated2))
+    # print(len(eroded2))
+    # print(len(labels))
+
+    # px_array = labels
     px_array = pyplot.imread(input_filename)
     
     fig, axs = pyplot.subplots(1, 1)
