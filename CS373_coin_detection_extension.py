@@ -433,8 +433,9 @@ def connectedComponents(image, image_width, image_height):
     return labels, uniqueLabels
     
 
-def findBoundingboxLimits(labels, image_width, image_height, object_labels):
+def findBoundingboxDetails(labels, image_width, image_height, object_labels):
     boundingBoxLimits = []
+    coinTypes = []
 
     # for the amount of objects in the image, get bounding box values
     for objects in range(0, len(object_labels)):
@@ -443,7 +444,7 @@ def findBoundingboxLimits(labels, image_width, image_height, object_labels):
         x = []
         y = []
 
-        # find min and max x and y values for each object
+        # find min and max x and y values for each object and average colour
         for i in range(0, image_height):
             for j in range(0, image_width):
                 if labels[i][j] == object_labels[objects]:
@@ -458,11 +459,21 @@ def findBoundingboxLimits(labels, image_width, image_height, object_labels):
             limits[3] = max(y)
             boundingBoxLimits.append(limits)
 
-    return boundingBoxLimits
-
-def showCoinDetails(image, image_width, image_height, bounding_box_list):
-
-    return []
+            #classifying objects based on average width
+            width = max(x)-min(x)
+            if width > 180 and width <= 215:
+                coinTypes.append('10c')
+            elif width > 215 and width <= 236:
+                coinTypes.append('20c')
+            elif width > 236 and width <= 250:
+                coinTypes.append('$1')
+            elif width > 250 and width <= 268:
+                coinTypes.append('50c')
+            elif width > 268 and width <= 285:
+                coinTypes.append('$2')
+            else:
+                coinTypes.append('Unknown')
+    return [boundingBoxLimits, coinTypes]
 
 
 # This is our code skeleton that performs the coin detection.
@@ -510,12 +521,7 @@ def main(input_path, output_path):
     normalised = normaliseImage(greyscaled, image_width, image_height)
     # median = medianFilterEXTENSION(normalised, image_width, image_height)
     # median2 = medianFilter(median, image_width, image_height)
-    laplaced = laplacianFilterEXTENSION(greyscaled, image_width, image_height)
-    # blurred = blurImage(laplaced, image_width, image_height)
-    # blurred2 = blurImage(blurred, image_width, image_height)
-    # blurred3 = blurImage(blurred2, image_width, image_height)
-    # blurred4 = blurImage(blurred3, image_width, image_height)
-    # thresholded = adaptiveThresholdImageEXTENSION(blurred4, image_width, image_height)
+    laplaced = laplacianFilterEXTENSION(normalised, image_width, image_height)
     median3 = medianFilterEXTENSION(laplaced, image_width, image_height)
     blurred = blurImage(median3, image_width, image_height)
     blurred2 = blurImage(blurred, image_width, image_height)
@@ -528,9 +534,9 @@ def main(input_path, output_path):
     eroded2 = erodeImage(eroded, image_width, image_height)
     eroded3 = erodeImage(eroded2, image_width, image_height)
     eroded4 = erodeImage(eroded3, image_width, image_height)
-    eroded5 = erodeImage(eroded4, image_width, image_height)
-    labels, uniqueLabels = connectedComponents(eroded5, image_width, image_height)
-    bounding_box_list = findBoundingboxLimits(labels, image_width, image_height, uniqueLabels)
+    # eroded5 = erodeImage(eroded4, image_width, image_height)
+    labels, uniqueLabels = connectedComponents(eroded4, image_width, image_height)
+    bounding_box_list = findBoundingboxDetails(labels, image_width, image_height, uniqueLabels)[0]
     print(len(greyscaled))
     # print(len(normalised))
     # print(len(blurred))
@@ -542,13 +548,14 @@ def main(input_path, output_path):
     # print(len(median2))  
 
     # px_array = laplaced
-    px_array = eroded4
+    # px_array = labels
     px_array = pyplot.imread(input_filename)
     
     fig, axs = pyplot.subplots(1, 1)
     axs.imshow(px_array, aspect='equal')
     
     # Loop through all bounding boxes
+    i = 0
     for bounding_box in bounding_box_list:
         bbox_min_x = bounding_box[0]
         bbox_min_y = bounding_box[1]
@@ -560,7 +567,12 @@ def main(input_path, output_path):
         bbox_height = bbox_max_y - bbox_min_y
         rect = Rectangle(bbox_xy, bbox_width, bbox_height, linewidth=2, edgecolor='r', facecolor='none')
         axs.add_patch(rect)
-        
+        # adding text to the bounding box
+        text_x = bbox_min_x
+        text_y = bbox_min_y + 15
+        axs.text(text_x, text_y, f"Coin: {(findBoundingboxDetails(labels, image_width, image_height, uniqueLabels)[1])[i]}\n", fontsize=11, color='r')
+        i += 1
+
     pyplot.axis('off')
     pyplot.tight_layout()
     default_output_path = f'./output_images/{image_name}_with_bbox.png'
