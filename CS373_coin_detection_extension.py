@@ -68,10 +68,10 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 
 ###########################################
 
 def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_width, image_height):
-    
+    print("greyscaling image")
     greyscale_pixel_array = createInitializedGreyscalePixelArray(image_width, image_height)
     
-    # STUDENT CODE HERE
+    # convert the RGB pixel arrays to greyscale pixel array
     for i in range(0,image_height):
         for j in range(0,image_width):
             greyscale_pixel_array[i][j] = round(0.299*pixel_array_r[i][j]+ 0.587*pixel_array_g[i][j] + 0.114*pixel_array_b[i][j])
@@ -79,7 +79,7 @@ def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_wid
     return greyscale_pixel_array
 
 def normaliseImage(image, image_width, image_height):
-    
+    print("normalising image")
     greyscale_pixel_array = image
 
     # get histogram frequency for q by flattening the greyscale pixel array
@@ -123,8 +123,8 @@ def normaliseImage(image, image_width, image_height):
             greyscale_pixel_array[i][j] = round(max(0, min(255, imageValue)))
 
     # ========================================================================================================
-    # EXTENSION: Histogram Equalisation
-    # greyscale_pixel_array = histogramEqualisation(greyscale_pixel_array, cum, image_width, image_height)
+    # EXTENSION: Histogram Equalisation 
+    # greyscale_pixel_array = histogramEqualisationEXTENSION(greyscale_pixel_array, cum, image_width, image_height)
     # greyscale_pixel_array = blurImage(greyscale_pixel_array, image_width, image_height)
     # greyscale_pixel_array = medianFilter(greyscale_pixel_array, image_width, image_height)
     # ========================================================================================================
@@ -132,7 +132,7 @@ def normaliseImage(image, image_width, image_height):
     return greyscale_pixel_array
 
 # EXTENSION
-def histogramEqualisation(image, cum, image_width, image_height):
+def histogramEqualisationEXTENSION(image, cum, image_width, image_height):
     t = image
     cMin = cum[0]
     cMax = cum[len(cum)-1]
@@ -177,7 +177,7 @@ def histogramEqualisation(image, cum, image_width, image_height):
     return t
 
 def laplacianFilterEXTENSION(image, image_width, image_height):
-    
+    print("applying laplace filter")
     laplacian = [[1.0, 1.0, 1.0],
                  [1.0, -8.0, 1.0],
                  [1.0, 1.0, 1.0]]
@@ -196,6 +196,7 @@ def laplacianFilterEXTENSION(image, image_width, image_height):
     return filtered
 
 def medianFilterEXTENSION(image, image_width, image_height):
+    print("applying median filter")
     padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
     paddedErosion = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
     depadded = createInitializedGreyscalePixelArray(image_width, image_height)
@@ -222,6 +223,7 @@ def medianFilterEXTENSION(image, image_width, image_height):
     return depadded
 
 def blurImage(image, image_width, image_height):
+    print("blurring image")
     blurred = []
     
     #apply 5x5 mean blur filter ignoring borders    
@@ -238,12 +240,11 @@ def blurImage(image, image_width, image_height):
     for i in range(0, image_height):
         for j in range(0, image_width):
             blurred[i][j] = abs(blurred[i][j])
-    
 
     return blurred
 
 def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
-    
+    print("calculating adaptive threshold")
     # get histogram frequency for q by flattening the greyscale pixel array
     q = []
     flattenedImage = [element for element2 in image for element in element2]
@@ -261,20 +262,17 @@ def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
             cum.append(hq[0])
         else:
             cum.append(cum[b-1] + hq[b])
-    
-    qHq = []
+
     # calculate average intensity of image (thtreshold1)
+    qHq = []
     for i in range(0,len(q)):
         qHq.append(q[i]*hq[i])
-    threshold1 = sum(qHq)/sum(hq)
-    
-    print(sum(hq))
-    print(threshold1)
 
+    threshold1 = sum(qHq)/sum(hq)
     thresholds = []
     loop = True
+
     while loop == True:
-        
         if thresholds.count(threshold1) > 1 and thresholds[len(thresholds)-1]==thresholds[len(thresholds)-2]:
             loop = False
             break
@@ -306,11 +304,11 @@ def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
                 image[i][j] = 255
             else:
                 image[i][j] = 0
-    
-    print(threshold1)
+
     return image
 
 def dilateImage(pixel_array, image_width, image_height):
+    print("dilating image")
     padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
     padded = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
     depadded = createInitializedGreyscalePixelArray(image_width, image_height)
@@ -366,6 +364,7 @@ def dilateImage(pixel_array, image_width, image_height):
     return depadded
 
 def erodeImage(pixel_array, image_width, image_height):
+    print("eroding image")
     padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
     paddedErosion = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
     depadded = createInitializedGreyscalePixelArray(image_width, image_height)
@@ -390,6 +389,7 @@ def erodeImage(pixel_array, image_width, image_height):
     return depadded
 
 def connectedComponents(image, image_width, image_height):
+    print("performing connected component analysis")
     labels = createInitializedGreyscalePixelArray(image_width, image_height)
     visited = createInitializedGreyscalePixelArray(image_width, image_height)
     label = 1
@@ -434,6 +434,7 @@ def connectedComponents(image, image_width, image_height):
     
 
 def findBoundingboxDetails(labels, image_width, image_height, object_labels):
+    print("finding bounding box details")
     boundingBoxLimits = []
     coinTypes = []
 
@@ -473,16 +474,16 @@ def findBoundingboxDetails(labels, image_width, image_height, object_labels):
                 coinTypes.append('$2')
             else:
                 coinTypes.append('Unknown')
+        
     return [boundingBoxLimits, coinTypes]
 
 
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
-    image_name = 'hard_case_2'
-    input_filename = f'./Images/hard/{image_name}.png'
-    # image_name = 'hard_case_2'
-    # input_filename = f'./Images/hard/{image_name}.png'
+    image_name = 'easy_case_6'
+    input_filename = f'./Images/easy/{image_name}.png'
+
     if TEST_MODE:
         input_filename = input_path
 
@@ -491,36 +492,10 @@ def main(input_path, output_path):
     (image_width, image_height, px_array_r, px_array_g, px_array_b) = readRGBImageToSeparatePixelArrays(input_filename)
     # computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
 
-
-
     
-    ###################################
-    ### STUDENT IMPLEMENTATION Here ###
-    ###################################
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    ############################################
-    ### Bounding box coordinates information ###
-    ### bounding_box[0] = min x
-    ### bounding_box[1] = min y
-    ### bounding_box[2] = max x
-    ### bounding_box[3] = max y
-    ############################################
-    
-    bounding_box_list = [[150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
+    # bounding_box_list = [[150, 140, 200, 190]]  # This is a dummy bounding box list, please comment it out when testing your own code.
     greyscaled = computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
-    # median65 = medianFilterEXTENSION(greyscaled, image_width, image_height)
-    # median66 = medianFilterEXTENSION(median65, image_width, image_height)
     normalised = normaliseImage(greyscaled, image_width, image_height)
-    # median = medianFilterEXTENSION(normalised, image_width, image_height)
-    # median2 = medianFilter(median, image_width, image_height)
     laplaced = laplacianFilterEXTENSION(normalised, image_width, image_height)
     median3 = medianFilterEXTENSION(laplaced, image_width, image_height)
     blurred = blurImage(median3, image_width, image_height)
@@ -534,18 +509,9 @@ def main(input_path, output_path):
     eroded2 = erodeImage(eroded, image_width, image_height)
     eroded3 = erodeImage(eroded2, image_width, image_height)
     eroded4 = erodeImage(eroded3, image_width, image_height)
-    # eroded5 = erodeImage(eroded4, image_width, image_height)
     labels, uniqueLabels = connectedComponents(eroded4, image_width, image_height)
     bounding_box_list = findBoundingboxDetails(labels, image_width, image_height, uniqueLabels)[0]
-    print(len(greyscaled))
-    # print(len(normalised))
-    # print(len(blurred))
-    # print(len(blurred3))
-    # print(len(thresholded))
-    # print(len(dilated2))
-    # print(len(eroded2))
-    # print(len(labels))
-    # print(len(median2))  
+
 
     # px_array = laplaced
     # px_array = labels
@@ -555,8 +521,11 @@ def main(input_path, output_path):
     axs.imshow(px_array, aspect='equal')
     
     # Loop through all bounding boxes
+    print("drawing bounding boxes")
     i = 0
     for bounding_box in bounding_box_list:
+        details = findBoundingboxDetails(labels, image_width, image_height, uniqueLabels)
+        coins = details[1]
         bbox_min_x = bounding_box[0]
         bbox_min_y = bounding_box[1]
         bbox_max_x = bounding_box[2]
@@ -569,9 +538,13 @@ def main(input_path, output_path):
         axs.add_patch(rect)
         # adding text to the bounding box
         text_x = bbox_min_x
-        text_y = bbox_min_y + 15
-        axs.text(text_x, text_y, f"Coin: {(findBoundingboxDetails(labels, image_width, image_height, uniqueLabels)[1])[i]}\n", fontsize=11, color='r')
+        text_y = bbox_min_y + 10
+        axs.text(text_x, text_y, f"Coin: {(details[1])[i]}\n", fontsize=11, color='r')
         i += 1
+    print("Number of coins: ",len(coins))
+    text_x = 18
+    text_y =  image_height + 10
+    axs.text(text_x, text_y, f"Number of coins: {len(coins)}\n", fontsize=11, color='r')
 
     pyplot.axis('off')
     pyplot.tight_layout()
