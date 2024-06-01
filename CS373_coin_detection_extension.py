@@ -132,8 +132,27 @@ def normaliseImage(image, image_width, image_height):
     return greyscale_pixel_array
 
 # EXTENSION
-def histogramEqualisationEXTENSION(image, cum, image_width, image_height):
+def histogramEqualisationEXTENSION(image, image_width, image_height):
     t = image
+
+    # get histogram frequency for q by flattening the greyscale pixel array
+    q = []
+    flattenedImage = [element for element2 in image for element in element2]
+    q = list(set(flattenedImage))
+
+    # get histogram hq
+    hq = []
+    for b in (q):
+        hq.append(flattenedImage.count(b))
+        
+    # get cumulative histogram cq
+    cum = []
+    for b in range(0,len(hq)):
+        if b==0:
+            cum.append(hq[0])
+        else:
+            cum.append(cum[b-1] + hq[b])
+
     cMin = cum[0]
     cMax = cum[len(cum)-1]
 
@@ -243,6 +262,24 @@ def blurImage(image, image_width, image_height):
 
     return blurred
 
+def gaussianBlurEXTENSION(image, image_width, image_height):
+    print("applying gaussian blur")
+    filtered = createInitializedGreyscalePixelArray(image_width, image_height)
+
+    gaussian = [[1, 2, 4, 2, 1],
+                [2, 4, 8, 4, 2],
+                [4, 8, 16, 8, 4],
+                [2, 4, 8, 4, 2],
+                [1, 2, 4, 2, 1]]
+    
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            if i-2 < 0 or i+2 >= image_height or j-2 < 0 or j+2 >= image_width:
+                filtered[i][j] = 0
+            else:
+                filtered[i][j] = abs(round((image[i-2][j-2]*gaussian[0][0] + image[i-2][j-1]*gaussian[0][1] + image[i-2][j]*gaussian[0][2] + image[i-2][j+1]*gaussian[0][3] + image[i-2][j+2]*gaussian[0][4] + image[i-1][j-2]*gaussian[1][0] + image[i-1][j-1]*gaussian[1][1] + image[i-1][j]*gaussian[1][2] + image[i-1][j+1]*gaussian[1][3] + image[i-1][j+2]*gaussian[1][4] + image[i][j-2]*gaussian[2][0] + image[i][j-1]*gaussian[2][1] + image[i][j]*gaussian[2][2] + image[i][j+1]*gaussian[2][3] + image[i][j+2]*gaussian[2][4] + image[i+1][j-2]*gaussian[3][0] + image[i+1][j-1]*gaussian[3][1] + image[i+1][j]*gaussian[3][2] + image[i+1][j+1]*gaussian[3][3] + image[i+1][j+2]*gaussian[3][4] + image[i+2][j-2]*gaussian[4][0] + image[i+2][j-1]*gaussian[4][1] + image[i+2][j]*gaussian[4][2] + image[i+2][j+1]*gaussian[4][3] + image[i+2][j+2]*gaussian[4][4])/100))
+    return filtered
+
 def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
     print("calculating adaptive threshold")
     # get histogram frequency for q by flattening the greyscale pixel array
@@ -301,6 +338,73 @@ def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
     for i in range(0, image_height):
         for j in range(0, image_width):
             if image[i][j] > threshold2:
+                image[i][j] = 255
+            else:
+                image[i][j] = 0
+
+    return image
+
+def otsuThresholdEXTENSION(image, image_width, image_height):
+    print("calculating otsu's threshold")
+    # get histogram frequency for q by flattening the greyscale pixel array
+    q = []
+    flattenedImage = [element for element2 in image for element in element2]
+    q = list(set(flattenedImage))
+
+    # get histogram hq
+    hq = []
+    for b in (q):
+        hq.append(flattenedImage.count(b))
+        
+    # get cumulative histogram cq
+    cum = []
+    for b in range(0,len(hq)):
+        if b==0:
+            cum.append(hq[0])
+        else:
+            cum.append(cum[b-1] + hq[b])
+
+    # calculate average intensity of image (thtreshold1)
+    qHq = []
+    for i in range(0,len(q)):
+        qHq.append(q[i]*hq[i])
+
+    thresholds = []
+
+    for threshold in q:
+        hq_ob = []
+        qhq_ob = []
+        hq_bg = []
+        qhq_bg = []
+
+        # calculate otsu's threshold
+        for i in range(0,len(hq)):
+            if q[i] >= threshold:
+                hq_ob.append(hq[i])
+                qhq_ob.append(q[i]*hq[i])
+            else:
+                hq_bg.append(hq[i])
+                qhq_bg.append(q[i]*hq[i])
+
+        if threshold == 0:
+            thresholds.append(0)
+        else:
+            wb_ob = sum(hq_ob)/image_width*image_height
+            wf_back = sum(hq_bg)/image_width*image_height
+            avg_ob = sum(qhq_ob)/sum(hq_ob)
+            avg_bg = sum(qhq_bg)/sum(hq_bg)
+
+            threshold2 = round(wb_ob*wf_back*((avg_ob-avg_bg)*(avg_ob-avg_bg)))
+            thresholds.append(threshold2)
+
+    # getting the threshold value in terms of q (histogram)
+    max_threshold_otsu = max(thresholds)
+    max_threshold = q[thresholds.index(max_threshold_otsu)]
+
+    # apply threshold to the image
+    for i in range(0, image_height):
+        for j in range(0, image_width):
+            if image[i][j] > max_threshold:
                 image[i][j] = 255
             else:
                 image[i][j] = 0
@@ -387,6 +491,13 @@ def erodeImage(pixel_array, image_width, image_height):
             depadded[i][j] = paddedErosion[i+2][j+2]
                 
     return depadded
+
+def openingImageEXTENSION(image, image_width, image_height):
+    print("opening image")
+    eroded = erodeImage(image, image_width, image_height)
+    dilated = dilateImage(eroded, image_width, image_height)
+
+    return dilated
 
 def connectedComponents(image, image_width, image_height):
     print("performing connected component analysis")
@@ -498,10 +609,14 @@ def main(input_path, output_path):
     normalised = normaliseImage(greyscaled, image_width, image_height)
     laplaced = laplacianFilterEXTENSION(normalised, image_width, image_height)
     median3 = medianFilterEXTENSION(laplaced, image_width, image_height)
+    # blurred = gaussianBlurEXTENSION(median3, image_width, image_height)               # uncomment to use experimental pipeline
+    # blurred2 = gaussianBlurEXTENSION(blurred, image_width, image_height)              # uncomment to use experimental pipeline
+    # blurred3 = gaussianBlurEXTENSION(blurred2, image_width, image_height)             # uncomment to use experimental pipeline
     blurred = blurImage(median3, image_width, image_height)
     blurred2 = blurImage(blurred, image_width, image_height)
     blurred3 = blurImage(blurred2, image_width, image_height)
     thresholded = adaptiveThresholdImageEXTENSION(blurred3, image_width, image_height)
+    # thresholded = otsuThresholdEXTENSION(blurred3, image_width, image_height)         # uncomment to use experimental pipeline
     dilated = dilateImage(thresholded, image_width, image_height)
     dilated2 = dilateImage(dilated, image_width, image_height)
     dilated3 = dilateImage(dilated2, image_width, image_height)
@@ -512,9 +627,7 @@ def main(input_path, output_path):
     labels, uniqueLabels = connectedComponents(eroded4, image_width, image_height)
     bounding_box_list = findBoundingboxDetails(labels, image_width, image_height, uniqueLabels)[0]
 
-
-    # px_array = laplaced
-    # px_array = labels
+    # px_array = thresholded
     px_array = pyplot.imread(input_filename)
     
     fig, axs = pyplot.subplots(1, 1)
