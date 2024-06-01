@@ -278,6 +278,7 @@ def gaussianBlurEXTENSION(image, image_width, image_height):
                 filtered[i][j] = 0
             else:
                 filtered[i][j] = abs(round((image[i-2][j-2]*gaussian[0][0] + image[i-2][j-1]*gaussian[0][1] + image[i-2][j]*gaussian[0][2] + image[i-2][j+1]*gaussian[0][3] + image[i-2][j+2]*gaussian[0][4] + image[i-1][j-2]*gaussian[1][0] + image[i-1][j-1]*gaussian[1][1] + image[i-1][j]*gaussian[1][2] + image[i-1][j+1]*gaussian[1][3] + image[i-1][j+2]*gaussian[1][4] + image[i][j-2]*gaussian[2][0] + image[i][j-1]*gaussian[2][1] + image[i][j]*gaussian[2][2] + image[i][j+1]*gaussian[2][3] + image[i][j+2]*gaussian[2][4] + image[i+1][j-2]*gaussian[3][0] + image[i+1][j-1]*gaussian[3][1] + image[i+1][j]*gaussian[3][2] + image[i+1][j+1]*gaussian[3][3] + image[i+1][j+2]*gaussian[3][4] + image[i+2][j-2]*gaussian[4][0] + image[i+2][j-1]*gaussian[4][1] + image[i+2][j]*gaussian[4][2] + image[i+2][j+1]*gaussian[4][3] + image[i+2][j+2]*gaussian[4][4])/100))
+    
     return filtered
 
 def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
@@ -364,20 +365,21 @@ def otsuThresholdEXTENSION(image, image_width, image_height):
         else:
             cum.append(cum[b-1] + hq[b])
 
-    # calculate average intensity of image (thtreshold1)
+    # calculate qHq
     qHq = []
+    
     for i in range(0,len(q)):
         qHq.append(q[i]*hq[i])
 
+    # exhaustively calculate otsu's threshold for every histogram bin
     thresholds = []
-
     for threshold in q:
         hq_ob = []
         qhq_ob = []
         hq_bg = []
         qhq_bg = []
 
-        # calculate otsu's threshold
+        # calculate average intensity for object and background
         for i in range(0,len(hq)):
             if q[i] >= threshold:
                 hq_ob.append(hq[i])
@@ -386,6 +388,7 @@ def otsuThresholdEXTENSION(image, image_width, image_height):
                 hq_bg.append(hq[i])
                 qhq_bg.append(q[i]*hq[i])
 
+        # calculating otsu's threshold
         if threshold == 0:
             thresholds.append(0)
         else:
@@ -612,10 +615,10 @@ def main(input_path, output_path):
     # blurred = gaussianBlurEXTENSION(median3, image_width, image_height)               # uncomment to use experimental pipeline
     # blurred2 = gaussianBlurEXTENSION(blurred, image_width, image_height)              # uncomment to use experimental pipeline
     # blurred3 = gaussianBlurEXTENSION(blurred2, image_width, image_height)             # uncomment to use experimental pipeline
-    blurred = blurImage(median3, image_width, image_height)
-    blurred2 = blurImage(blurred, image_width, image_height)
-    blurred3 = blurImage(blurred2, image_width, image_height)
-    thresholded = adaptiveThresholdImageEXTENSION(blurred3, image_width, image_height)
+    blurred = blurImage(median3, image_width, image_height)                             # comment to use experimental pipeline
+    blurred2 = blurImage(blurred, image_width, image_height)                            # comment to use experimental pipeline
+    blurred3 = blurImage(blurred2, image_width, image_height)                           # comment to use experimental pipeline
+    thresholded = adaptiveThresholdImageEXTENSION(blurred3, image_width, image_height)  # comment to use experimental pipeline
     # thresholded = otsuThresholdEXTENSION(blurred3, image_width, image_height)         # uncomment to use experimental pipeline
     dilated = dilateImage(thresholded, image_width, image_height)
     dilated2 = dilateImage(dilated, image_width, image_height)
