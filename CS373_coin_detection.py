@@ -413,10 +413,9 @@ def findBoundingboxLimits(labels, image_width, image_height, object_labels):
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
-    image_name = 'easy_case_2'
+    image_name = 'easy_case_6'
     input_filename = f'./Images/easy/{image_name}.png'
-    # image_name = 'hard_case_2'
-    # input_filename = f'./Images/hard/{image_name}.png'
+
     if TEST_MODE:
         input_filename = input_path
 
@@ -474,7 +473,7 @@ def main(input_path, output_path):
     # print(len(eroded2))
     # print(len(labels))
 
-    # px_array = labels
+    px_array = labels
     px_array = pyplot.imread(input_filename)
     
     fig, axs = pyplot.subplots(1, 1)
