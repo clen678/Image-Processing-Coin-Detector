@@ -122,57 +122,7 @@ def normaliseImage(image, image_width, image_height):
             imageValue = (255/(qBeta-qAlpha))*(greyscale_pixel_array[i][j]-qAlpha)
             greyscale_pixel_array[i][j] = round(max(0, min(255, imageValue)))
 
-    # ========================================================================================================
-    # EXTENSION: Histogram Equalisation
-    # greyscale_pixel_array = histogramEqualisation(greyscale_pixel_array, cum, image_width, image_height)
-    # ========================================================================================================
-
     return greyscale_pixel_array
-
-# EXTENSION
-def histogramEqualisation(image, cum, image_width, image_height):
-    t = image
-    cMin = cum[0]
-    cMax = cum[len(cum)-1]
-
-    # generate the equalised histogram for new q
-    qEqualised = []
-    flattenedImage = [element for element2 in t for element in element2]
-    qEqualised = list(set(flattenedImage))
-
-    # get histogram hq
-    hqEqualised = []
-    for b in (qEqualised):
-        hqEqualised.append(flattenedImage.count(b))
-
-    # get cumulative histogram cq
-    cumEqualised = []
-    for b in range(0,len(hqEqualised)):
-        if b==0:
-            cumEqualised.append(hqEqualised[0])
-        else:
-            cumEqualised.append(cumEqualised[b-1] + hqEqualised[b])
-
-    # calculate equalisation
-    for i in range(0,image_height):
-        for j in range(0,image_width):
-
-            #get the index of the cum associated with the greyscale pixel value
-            flattened_index = qEqualised.index(t[i][j])
-            t[i][j] = round( 255*((cum[flattened_index] - cMin)/(cMax - cMin) ))
-
-    # plt.bar(range(len(cum)), cum)
-    # plt.xlabel('Bin')
-    # plt.ylabel('Frequency')
-    # plt.title('Histogram')
-    # plt.show()
-
-    # plt.bar(range(len(cumEqualised)), cumEqualised)
-    # plt.xlabel('Bin')
-    # plt.ylabel('Frequency')
-    # plt.title('Histogram')
-    # plt.show()
-    return t
 
 def sharrFilter(image, image_width, image_height):
     
@@ -207,16 +157,18 @@ def sharrFilter(image, image_width, image_height):
     return newImage2
 
 def blurImage(image, image_width, image_height):
+
     blurred = []
     
     #apply 5x5 mean blur filter ignoring borders    
     for i in range(0, image_height):
         temp = []
         for j in range(0, image_width):
-            if i-2 < 0 or i+2 >= image_height or j-2 < 0 or j+2 >= image_width:
+            if i+2 >= image_height or j+2 >= image_width or j-2 < 0 or i-2 < 0:
                 temp.append(0)
             else:
-                temp.append(round((image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2])/25))
+                sum = image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2]
+                temp.append(round(sum/25))
         blurred.append(temp)
     
     # taking absolute value of the blurred image
@@ -342,37 +294,43 @@ def erodeImage(pixel_array, image_width, image_height):
     return depadded
 
 def connectedComponents(image, image_width, image_height):
+
     labels = createInitializedGreyscalePixelArray(image_width, image_height)
-    visited = createInitializedGreyscalePixelArray(image_width, image_height)
+    seen = createInitializedGreyscalePixelArray(image_width, image_height)
     label = 1
 
     for i in range(0, image_height):
         for j in range(0, image_width):
 
-            # if pixel is not object and not visited
-            if image[i][j] != 0 and visited[i][j] == 0:
+            # if pixel is not object and not seen
+            if image[i][j] != 0 and seen[i][j] == 0:
                 q = []
                 q.append((i, j))
 
                 while len(q) > 0:
-                    (x, y) = q.pop()
-                    labels[x][y] = label
-                    visited[x][y] = 1
+                    (row, cols) = q.pop()
+                    labels[row][cols] = label
+                    seen[row][cols] = 1
 
-                    # check if the pixel is object and not visited and add to queue
-                    if x-1 >= 0 and image[x-1][y] != 0 and visited[x-1][y] == 0:
-                        q.append((x-1, y))
-                        visited[x-1][y] = 1
-                    if x + 1 < image_height and image[x+1][y] != 0 and visited[x+1][y] == 0:
-                        q.append((x+1, y))
-                        visited[x+1][y] = 1
-                    if y >= 0 and image[x][y-1] != 0 and visited[x][y-1] == 0:
-                        q.append((x, y-1))
-                        visited[x][y-1] = 1
-                    if y+1 < image_width and image[x][y+1] != 0 and visited[x][y+1] == 0:
-                        q.append((x, y+1))
-                        visited[x][y+1] = 1
-                label += 1
+                    if cols+1 < image_width and row+1 < image_height:
+                        # check if the pixel is object and not seen and add to queue
+                        if seen[row][cols+1] == 0 and image[row][cols+1] != 0:
+                            q.append((row, cols+1))
+                            seen[row][cols+1] = 1
+
+                        if seen[row-1][cols] == 0 and image[row-1][cols] != 0 and row-1 >= 0:
+                            q.append((row-1, cols))
+                            seen[row-1][cols] = 1
+
+                        if seen[row][cols-1] == 0 and image[row][cols-1] != 0 and cols >= 0:
+                            q.append((row, cols-1))
+                            seen[row][cols-1] = 1
+
+                        if seen[row+1][cols] == 0 and image[row+1][cols] != 0:
+                            q.append((row+1, cols))
+                            seen[row+1][cols] = 1
+
+                label = label + 1
 
                 # get list of different labels generated from the image
                 uniqueLabels = []
@@ -380,6 +338,7 @@ def connectedComponents(image, image_width, image_height):
                     for j in range(0, image_width):
                         if labels[i][j] not in uniqueLabels:
                             uniqueLabels.append(labels[i][j])
+
                 uniqueLabels.remove(0)
                 
     return labels, uniqueLabels
@@ -463,15 +422,6 @@ def main(input_path, output_path):
     eroded4 = erodeImage(eroded3, image_width, image_height)
     labels, uniqueLabels = connectedComponents(eroded4, image_width, image_height)
     bounding_box_list = findBoundingboxLimits(labels, image_width, image_height, uniqueLabels)
-    # print(len(greyscaled))
-    # print(len(normalised))
-    # print(len(sharred))
-    # print(len(blurred))
-    # print(len(blurred3))
-    # print(len(thresholded))
-    # print(len(dilated2))
-    # print(len(eroded2))
-    # print(len(labels))
 
     px_array = labels
     px_array = pyplot.imread(input_filename)

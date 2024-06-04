@@ -122,13 +122,6 @@ def normaliseImage(image, image_width, image_height):
             imageValue = (255/(qBeta-qAlpha))*(greyscale_pixel_array[i][j]-qAlpha)
             greyscale_pixel_array[i][j] = round(max(0, min(255, imageValue)))
 
-    # ========================================================================================================
-    # EXTENSION: Histogram Equalisation 
-    # greyscale_pixel_array = histogramEqualisationEXTENSION(greyscale_pixel_array, cum, image_width, image_height)
-    # greyscale_pixel_array = blurImage(greyscale_pixel_array, image_width, image_height)
-    # greyscale_pixel_array = medianFilter(greyscale_pixel_array, image_width, image_height)
-    # ========================================================================================================
-
     return greyscale_pixel_array
 
 # EXTENSION
@@ -249,16 +242,12 @@ def blurImage(image, image_width, image_height):
     for i in range(0, image_height):
         temp = []
         for j in range(0, image_width):
-            if i-2 < 0 or i+2 >= image_height or j-2 < 0 or j+2 >= image_width:
+            if i+2 >= image_height or j+2 >= image_width or j-2 < 0 or i-2 < 0:
                 temp.append(0)
             else:
-                temp.append(round((image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2])/25))
+                sum = image[i-2][j-2] + image[i-2][j-1] + image[i-2][j] + image[i-2][j+1] + image[i-2][j+2] + image[i-1][j-2] + image[i-1][j-1] + image[i-1][j] + image[i-1][j+1] + image[i-1][j+2] + image[i][j-2] + image[i][j-1] + image[i][j] + image[i][j+1] + image[i][j+2] + image[i+1][j-2] + image[i+1][j-1] + image[i+1][j] + image[i+1][j+1] + image[i+1][j+2] + image[i+2][j-2] + image[i+2][j-1] + image[i+2][j] + image[i+2][j+1] + image[i+2][j+2]
+                temp.append(abs(round(sum/25)))
         blurred.append(temp)
-    
-    # taking absolute value of the blurred image
-    for i in range(0, image_height):
-        for j in range(0, image_width):
-            blurred[i][j] = abs(blurred[i][j])
 
     return blurred
 
@@ -523,22 +512,23 @@ def connectedComponents(image, image_width, image_height):
                     labels[row][cols] = label
                     seen[row][cols] = 1
 
-                    # check if the pixel is object and not seen and add to queue
-                    if seen[row][cols+1] == 0 and image[row][cols+1] != 0 and cols+1 < image_width:
-                        q.append((row, cols+1))
-                        seen[row][cols+1] = 1
+                    if cols+1 < image_width and row+1 < image_height:
+                        # check if the pixel is object and not seen and add to queue
+                        if seen[row][cols+1] == 0 and image[row][cols+1] != 0:
+                            q.append((row, cols+1))
+                            seen[row][cols+1] = 1
 
-                    if seen[row-1][cols] == 0 and image[row-1][cols] != 0 and row-1 >= 0:
-                        q.append((row-1, cols))
-                        seen[row-1][cols] = 1
+                        if seen[row-1][cols] == 0 and image[row-1][cols] != 0 and row-1 >= 0:
+                            q.append((row-1, cols))
+                            seen[row-1][cols] = 1
 
-                    if seen[row][cols-1] == 0 and image[row][cols-1] != 0 and cols >= 0:
-                        q.append((row, cols-1))
-                        seen[row][cols-1] = 1
+                        if seen[row][cols-1] == 0 and image[row][cols-1] != 0 and cols >= 0:
+                            q.append((row, cols-1))
+                            seen[row][cols-1] = 1
 
-                    if seen[row+1][cols] == 0 and image[row+1][cols] != 0 and row+1 < image_height:
-                        q.append((row+1, cols))
-                        seen[row+1][cols] = 1
+                        if seen[row+1][cols] == 0 and image[row+1][cols] != 0:
+                            q.append((row+1, cols))
+                            seen[row+1][cols] = 1
 
                 label = label + 1
 
@@ -558,6 +548,7 @@ def findBoundingboxDetails(labels, image_width, image_height, object_labels):
     print("finding bounding box details")
     boundingBoxLimits = []
     coinTypes = []
+    coinNums = []
 
     # for the amount of objects in the image, get bounding box values
     for objects in range(0, len(object_labels)):
@@ -585,24 +576,29 @@ def findBoundingboxDetails(labels, image_width, image_height, object_labels):
             width = max(x)-min(x)
             if width > 180 and width <= 215:
                 coinTypes.append('10c')
+                coinNums.append(0.1)
             elif width > 215 and width <= 236:
                 coinTypes.append('20c')
+                coinNums.append(0.2)
             elif width > 236 and width <= 250:
                 coinTypes.append('$1')
+                coinNums.append(1)
             elif width > 250 and width <= 268:
                 coinTypes.append('50c')
+                coinNums.append(0.5)
             elif width > 268 and width <= 285:
                 coinTypes.append('$2')
+                coinNums.append(2)
             else:
                 coinTypes.append('Unknown')
         
-    return [boundingBoxLimits, coinTypes]
+    return [boundingBoxLimits, coinTypes, sum(coinNums)]
 
 
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
-    image_name = 'hard_case_3'
+    image_name = 'hard_case_2'
     input_filename = f'./Images/hard/{image_name}.png'
 
     if TEST_MODE:
@@ -649,6 +645,7 @@ def main(input_path, output_path):
     for bounding_box in bounding_box_list:
         details = findBoundingboxDetails(labels, image_width, image_height, uniqueLabels)
         coins = details[1]
+        total = details[2]
         bbox_min_x = bounding_box[0]
         bbox_min_y = bounding_box[1]
         bbox_max_x = bounding_box[2]
@@ -667,7 +664,7 @@ def main(input_path, output_path):
     print("Number of coins: ",len(coins))
     text_x = 18
     text_y =  image_height + 10
-    axs.text(text_x, text_y, f"Number of coins: {len(coins)}\n", fontsize=11, color='r')
+    axs.text(text_x, text_y, f"Number of coins: {len(coins)}  Total amount: ${total}\n", fontsize=11, color='r')
 
     pyplot.axis('off')
     pyplot.tight_layout()
