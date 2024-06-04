@@ -301,7 +301,7 @@ def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
         else:
             cum.append(cum[b-1] + hq[b])
 
-    # calculate average intensity of image (thtreshold1)
+    # calculate qhq
     qHq = []
     for i in range(0,len(q)):
         qHq.append(q[i]*hq[i])
@@ -310,6 +310,7 @@ def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
     thresholds = []
     loop = True
 
+    # loop until the threshold found is the same as the last threshold
     while loop == True:
         if thresholds.count(threshold1) > 1 and thresholds[len(thresholds)-1]==thresholds[len(thresholds)-2]:
             loop = False
@@ -320,7 +321,7 @@ def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
         hq_bg = []
         qhq_bg = []
 
-        # calculate average intensity for object and background
+        # gathering values for object and background
         for i in range(0,len(hq)):
             if q[i] > threshold1:
                 hq_ob.append(hq[i])
@@ -329,6 +330,7 @@ def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
                 hq_bg.append(hq[i])
                 qhq_bg.append(q[i]*hq[i])
 
+        # calculate average intensity for object and background
         avg_ob = sum(qhq_ob)/sum(hq_ob)
         avg_bg = sum(qhq_bg)/sum(hq_bg)
         threshold2 = round((avg_ob + avg_bg)/2)
