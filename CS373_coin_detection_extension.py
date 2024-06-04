@@ -507,36 +507,40 @@ def openingImageEXTENSION(image, image_width, image_height):
 def connectedComponents(image, image_width, image_height):
     print("performing connected component analysis")
     labels = createInitializedGreyscalePixelArray(image_width, image_height)
-    visited = createInitializedGreyscalePixelArray(image_width, image_height)
+    seen = createInitializedGreyscalePixelArray(image_width, image_height)
     label = 1
 
     for i in range(0, image_height):
         for j in range(0, image_width):
 
-            # if pixel is not object and not visited
-            if image[i][j] != 0 and visited[i][j] == 0:
+            # if pixel is not object and not seen
+            if image[i][j] != 0 and seen[i][j] == 0:
                 q = []
                 q.append((i, j))
 
                 while len(q) > 0:
-                    (x, y) = q.pop()
-                    labels[x][y] = label
-                    visited[x][y] = 1
+                    (row, cols) = q.pop()
+                    labels[row][cols] = label
+                    seen[row][cols] = 1
 
-                    # check if the pixel is object and not visited and add to queue
-                    if x-1 >= 0 and image[x-1][y] != 0 and visited[x-1][y] == 0:
-                        q.append((x-1, y))
-                        visited[x-1][y] = 1
-                    if x + 1 < image_height and image[x+1][y] != 0 and visited[x+1][y] == 0:
-                        q.append((x+1, y))
-                        visited[x+1][y] = 1
-                    if y >= 0 and image[x][y-1] != 0 and visited[x][y-1] == 0:
-                        q.append((x, y-1))
-                        visited[x][y-1] = 1
-                    if y+1 < image_width and image[x][y+1] != 0 and visited[x][y+1] == 0:
-                        q.append((x, y+1))
-                        visited[x][y+1] = 1
-                label += 1
+                    # check if the pixel is object and not seen and add to queue
+                    if seen[row][cols+1] == 0 and image[row][cols+1] != 0 and cols+1 < image_width:
+                        q.append((row, cols+1))
+                        seen[row][cols+1] = 1
+
+                    if seen[row-1][cols] == 0 and image[row-1][cols] != 0 and row-1 >= 0:
+                        q.append((row-1, cols))
+                        seen[row-1][cols] = 1
+
+                    if seen[row][cols-1] == 0 and image[row][cols-1] != 0 and cols >= 0:
+                        q.append((row, cols-1))
+                        seen[row][cols-1] = 1
+
+                    if seen[row+1][cols] == 0 and image[row+1][cols] != 0 and row+1 < image_height:
+                        q.append((row+1, cols))
+                        seen[row+1][cols] = 1
+
+                label = label + 1
 
                 # get list of different labels generated from the image
                 uniqueLabels = []
@@ -544,6 +548,7 @@ def connectedComponents(image, image_width, image_height):
                     for j in range(0, image_width):
                         if labels[i][j] not in uniqueLabels:
                             uniqueLabels.append(labels[i][j])
+
                 uniqueLabels.remove(0)
                 
     return labels, uniqueLabels
@@ -597,8 +602,8 @@ def findBoundingboxDetails(labels, image_width, image_height, object_labels):
 # This is our code skeleton that performs the coin detection.
 def main(input_path, output_path):
     # This is the default input image, you may change the 'image_name' variable to test other images.
-    image_name = 'easy_case_6'
-    input_filename = f'./Images/easy/{image_name}.png'
+    image_name = 'hard_case_3'
+    input_filename = f'./Images/hard/{image_name}.png'
 
     if TEST_MODE:
         input_filename = input_path
