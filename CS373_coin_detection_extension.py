@@ -14,6 +14,7 @@ import imageIO.png
 # Define constant and global variables
 TEST_MODE = False    # Please, DO NOT change this variable!
 
+# method to read a PNG file and return the image width, height and pixel arrays for RGB components
 def readRGBImageToSeparatePixelArrays(input_filename):
     image_reader = imageIO.png.Reader(filename=input_filename)
     # png reader gives us width and height, as well as RGB data in image_rows (a list of rows of RGB triplets)
@@ -51,7 +52,7 @@ def readRGBImageToSeparatePixelArrays(input_filename):
 
     return (image_width, image_height, pixel_array_r, pixel_array_g, pixel_array_b)
 
-# a useful shortcut method to create a list of lists based array representation for an image, initialized with a value
+# method to create a list of lists based array representation for an image, initialized with a value
 def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 0):
     new_pixel_array = []
     for _ in range(image_height):
@@ -67,6 +68,7 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 
 ### You can add your own functions here ###
 ###########################################
 
+# method to convert RGB pixel arrays to greyscale pixel array
 def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_width, image_height):
     print("greyscaling image")
     greyscale_pixel_array = createInitializedGreyscalePixelArray(image_width, image_height)
@@ -78,6 +80,7 @@ def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_wid
 
     return greyscale_pixel_array
 
+# method to normalise the greyscale pixel array to a range of 0-255
 def normaliseImage(image, image_width, image_height):
     print("normalising image")
     greyscale_pixel_array = image
@@ -125,6 +128,7 @@ def normaliseImage(image, image_width, image_height):
     return greyscale_pixel_array
 
 # EXTENSION
+# method to compute histogram equalisation on the greyscale pixel array
 def histogramEqualisationEXTENSION(image, image_width, image_height):
     t = image
 
@@ -188,6 +192,8 @@ def histogramEqualisationEXTENSION(image, image_width, image_height):
     # plt.show()
     return t
 
+# EXTENSION
+# method to apply laplacian filter for edge detection on the greyscale pixel array
 def laplacianFilterEXTENSION(image, image_width, image_height):
     print("applying laplace filter")
     laplacian = [[1.0, 1.0, 1.0],
@@ -207,6 +213,8 @@ def laplacianFilterEXTENSION(image, image_width, image_height):
     
     return filtered
 
+# EXTENSION
+# method to apply median filter for noise reduction on the greyscale pixel array
 def medianFilterEXTENSION(image, image_width, image_height):
     print("applying median filter")
     padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
@@ -234,6 +242,7 @@ def medianFilterEXTENSION(image, image_width, image_height):
      
     return depadded
 
+# method to apply a 5x5 mean blur filter
 def blurImage(image, image_width, image_height):
     print("blurring image")
     blurred = []
@@ -251,6 +260,8 @@ def blurImage(image, image_width, image_height):
 
     return blurred
 
+# EXTENSION
+# method to apply a 5x5 gaussian blur filter
 def gaussianBlurEXTENSION(image, image_width, image_height):
     print("applying gaussian blur")
     filtered = createInitializedGreyscalePixelArray(image_width, image_height)
@@ -270,6 +281,8 @@ def gaussianBlurEXTENSION(image, image_width, image_height):
     
     return filtered
 
+# EXTENSION
+# method to apply adaptive thresholding algorithm to convert the image to a binary image
 def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
     print("calculating adaptive threshold")
     # get histogram frequency for q by flattening the greyscale pixel array
@@ -336,6 +349,8 @@ def adaptiveThresholdImageEXTENSION(image, image_width, image_height):
 
     return image
 
+# EXTENSION
+# method to apply otsu's thresholding algorithm to convert the image to a binary image
 def otsuThresholdEXTENSION(image, image_width, image_height):
     print("calculating otsu's threshold")
     # get histogram frequency for q by flattening the greyscale pixel array
@@ -405,6 +420,7 @@ def otsuThresholdEXTENSION(image, image_width, image_height):
 
     return image
 
+# method to apply a 5x5 dilation filter to the binary image with border zero padding
 def dilateImage(pixel_array, image_width, image_height):
     print("dilating image")
     padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
@@ -461,6 +477,7 @@ def dilateImage(pixel_array, image_width, image_height):
        
     return depadded
 
+# method to apply a 5x5 erosion filter to a binary image with border zero padding
 def erodeImage(pixel_array, image_width, image_height):
     print("eroding image")
     padding = createInitializedGreyscalePixelArray(image_width+4, image_height+4)
@@ -475,7 +492,7 @@ def erodeImage(pixel_array, image_width, image_height):
     #dilate the image
     for i in range(2, image_height+2):
         for j in range(2, image_width+2):
-            #if kernel hits in the image
+            #if kernel fits in the image
             if padding[i-2][j] >=1 and padding[i-1][j-1] >=1 and padding[i-1][j] >=1 and padding[i-1][j+1] >=1 and padding[i][j-2] >=1 and padding[i][j-1] >=1 and padding[i][j] >=1 and padding[i][j+1] >=1 and padding[i][j+2] >=1 and padding[i+1][j-1] >=1 and padding[i+1][j] >=1 and padding[i+1][j+1] >=1 and padding[i+2][j] >=1:
                 paddedErosion[i][j] = 255
                 
@@ -493,6 +510,7 @@ def openingImageEXTENSION(image, image_width, image_height):
 
     return dilated
 
+# performs connected component analysis on a binary image and returns the labels of the connected components
 def connectedComponents(image, image_width, image_height):
     print("performing connected component analysis")
     labels = createInitializedGreyscalePixelArray(image_width, image_height)
@@ -504,32 +522,40 @@ def connectedComponents(image, image_width, image_height):
 
             # if pixel is not object and not seen
             if image[i][j] != 0 and seen[i][j] == 0:
-                q = []
-                q.append((i, j))
+                queue = []
+                queue.append((i, j))
+                
+                # perform breadth first search while the queueueue is not empty
+                while len(queue) > 0:
 
-                while len(q) > 0:
-                    (row, cols) = q.pop()
+                    # get the pixel from the queue and mark as seen
+                    (row, cols) = queue.pop()
                     labels[row][cols] = label
                     seen[row][cols] = 1
 
+                    # check if the pixel is object and not seen and add to queue
                     if cols+1 < image_width and row+1 < image_height:
-                        # check if the pixel is object and not seen and add to queue
+                        # check the right neighbour
                         if seen[row][cols+1] == 0 and image[row][cols+1] != 0:
-                            q.append((row, cols+1))
+                            queue.append((row, cols+1))
                             seen[row][cols+1] = 1
-
+                        
+                        # check the top neighbour
                         if seen[row-1][cols] == 0 and image[row-1][cols] != 0 and row-1 >= 0:
-                            q.append((row-1, cols))
+                            queue.append((row-1, cols))
                             seen[row-1][cols] = 1
 
+                        # check the left neighbour
                         if seen[row][cols-1] == 0 and image[row][cols-1] != 0 and cols >= 0:
-                            q.append((row, cols-1))
+                            queue.append((row, cols-1))
                             seen[row][cols-1] = 1
 
+                        # check the bottom neighbour
                         if seen[row+1][cols] == 0 and image[row+1][cols] != 0:
-                            q.append((row+1, cols))
+                            queue.append((row+1, cols))
                             seen[row+1][cols] = 1
-
+                
+                # increment label to be used for the next object
                 label = label + 1
 
                 # get list of different labels generated from the image
@@ -540,10 +566,11 @@ def connectedComponents(image, image_width, image_height):
                             uniqueLabels.append(labels[i][j])
 
                 uniqueLabels.remove(0)
-                
+    
+    # return the an image of objects with labels and a list of unique labels (number of objects)
     return labels, uniqueLabels
     
-
+# method to find the min,max x and y values for each object in the image
 def findBoundingboxDetails(labels, image_width, image_height, object_labels):
     print("finding bounding box details")
     boundingBoxLimits = []
